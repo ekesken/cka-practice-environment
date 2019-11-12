@@ -2,13 +2,19 @@ version: '3.6'
 services:
   gateone:
     build: ./gateone
-    ports:
-    - "8080:8000"
-    hostname: kubectl
-    networks:
-    - frontend
+    network_mode: host  # to let kube-proxy create network namespaces without errors
+    dns: 8.8.8.8 # to prevent loop for core-dns
+    extra_hosts:
+      exam: 127.0.0.1
+    hostname: exam
     volumes:
     - ssh_key:/root/.ssh/
+    # to pass kubeadm system verification
+    - /boot:/boot:ro
+    - /lib/modules:/lib/modules:ro
+    # to be able to use overlay2 storage-driver for docker
+    - ./gateone/var_lib_docker:/var/lib/docker:rw
+    privileged: true
   lab:
     build: ./lab
     ports:
